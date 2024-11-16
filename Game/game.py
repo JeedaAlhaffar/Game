@@ -1,6 +1,6 @@
 import numpy as np
 import copy
-
+from collections import deque
 class Square:
     def __init__(self, color, start_pos, goal_pos):
         self.color = color
@@ -95,24 +95,21 @@ class GridGame:
                     if (square.x, square.y) == (square.goal_x, square.goal_y):
                         square.active = False
                         self.grid[square.goal_x][square.goal_y] = ' '
-                        print(f"{square.color} reached its goal and disappeared!")
                         goals_reached += 1
 
                     if square.active:
                         self.grid[square.x][square.y] = square.color
 
         self.history.append(copy.deepcopy(self.grid))
+        
+
 
         if all(not square.active for square in self.squares):
-
-            print("Congratulations, all squares reached their goals!")
+            
             return True
 
         return False
 
-    def get_history(self):
-        return self.history
-    
     def generate_next_states(self):
         next_states = []
 
@@ -122,43 +119,83 @@ class GridGame:
         for move in possible_moves:
             new_game = copy.deepcopy(self)
             new_game.move_both(move)
-            next_states.append((move, new_game.grid))
-        
+            next_states.append((move, new_game))
+        print(f"Possible moves from current state: {possible_moves}")
+
         return next_states
 
+    def is_goal_state(self):
+        return all(not square.active for square in self.squares)
 
-grid1 = np.array([
-    [' ', '#', '#', '#', '#', '#', ' ', ' ', ' ', ' ', ' '],
-    ['#', '#', 'R', ' ', ' ', '#', '#', '#', '#', '#', ' '],
-    ['#', ' ', ' ', ' ', ' ', '#', '#', 'b', ' ', '#', ' '],
-    ['#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#', '#'],
-    ['#', ' ', ' ', ' ', '#', '#', '#', ' ', ' ', 'r', '#'],
-    ['#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#', '#'],
-    ['#', '#', 'B', ' ', '#', '#', '#', '#', '#', '#', ' '],
-    [' ', '#', '#', '#', '#', ' ', ' ', ' ', ' ', ' ', ' ']
-])
+    def dfs_solve(self):
+        stack = [(self, [])]  
+        visited = set()
+        states_explored = 0
 
+        while stack:
+            current_state, path = stack.pop()
+            state_repr = self.grid_repr(current_state.grid)
+            if state_repr in visited:
+                continue
 
+            visited.add(state_repr)
+            states_explored += 1
 
-grid3 = np.array([
-    [' ', ' ', ' ', ' ', '#', '#', '#', '#', '#'],
-    [' ', ' ', ' ', ' ', '#', ' ', ' ', ' ', '#'],
-    ['#', '#', '#', '#', '#', 'r', '#', ' ', '#'],
-    ['#', ' ', ' ', ' ', 'R', ' ', '#', ' ', '#'],
-    ['#', ' ', ' ', 'b', '#', 'B', '#', ' ', '#'],
-    ['#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#'],
-    ['#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#'],
-    ['#', '#', '#', '#', '#', '#', '#', '#', '#']
-])
+            if current_state.is_goal_state():
+                print("Solution found!")
+                print("Path to goal:")
+                for move, state in path:
+                    print(f"Move: {move}")
+                    for row in state.grid:
+                        print(" ".join(row))
+                    print("\n")
+                print(f"Total states explored: {states_explored}")
+                return path
 
+            for move, next_state in current_state.generate_next_states():
+                if self.grid_repr(next_state.grid) not in visited:
+                    stack.append((next_state, path + [(move, next_state)]))
 
-grid4 = np.array([
-    ['#', '#', '#', '#', '#', '#', ' ', ' ', ' '],
-    ['#', 'r', ' ', ' ', ' ', '#', '#', ' ', ' '],
-    ['#', ' ', ' ', 'b', ' ', ' ', '#', '#', '#'],
-    ['#', ' ', ' ', ' ', ' ', ' ', 'B', 'R', '#'],
-    ['#', '#', '#', '#', '#', '#', '#', '#', '#']
-])
+        print("No solution found.")
+        return None
+
+    def grid_repr(self, grid):
+        return tuple(tuple(row) for row in grid)
+    def bfs_solve(self):
+        queue = deque([(self, [])])  
+        visited = set()
+        states_explored = 0
+
+        while queue:
+            current_state, path = queue.popleft()
+            state_repr = self.grid_repr(current_state.grid)
+            if state_repr in visited:
+                continue
+
+            visited.add(state_repr)
+            states_explored += 1
+
+            if current_state.is_goal_state():
+                print("Solution found!")
+                print("Path to goal:")
+                for move, state in path:
+                    print(f"Move: {move}")
+                    for row in state.grid:
+                        print(" ".join(row))
+                    print("\n")
+                print(f"Total states explored: {states_explored}")
+                return path
+
+            for move, next_state in current_state.generate_next_states():
+                if self.grid_repr(next_state.grid) not in visited:
+                    queue.append((next_state, path + [(move, next_state)]))
+
+        print("No solution found.")
+        return None
+
+    def grid_repr(self, grid):
+        return tuple(tuple(row) for row in grid)
+
 grid5 = np.array([
     [' ', '#', '#', '#', '#', '#', ' ', ' ', ' ', ' ', ' '],
     ['#', '#', 'R', ' ', ' ', '#', '#', '#', '#', '#', ' '],
@@ -169,18 +206,25 @@ grid5 = np.array([
     ['#', '#', 'B', ' ', '#', '#', '#', '#', '#', '#', ' '],
     [' ', '#', '#', '#', '#', ' ', ' ', ' ', ' ', ' ', ' ']
 ])
+grid3 = np.array([
+    [' ', ' ', ' ', ' ', '#', '#', '#', '#', '#'],
+    [' ', ' ', ' ', ' ', '#', ' ', ' ', ' ', '#'],
+    ['#', '#', '#', '#', '#', 'r', '#', ' ', '#'],
+    ['#', ' ', ' ', ' ', 'R', ' ', '#', ' ', '#'],
+    ['#', ' ', ' ', 'b', '#', 'B', '#', ' ', '#'],
+    ['#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#'],
+    ['#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#'],
+    ['#', '#', '#', '#', '#', '#', '#', '#', '#']
+])
+grid4 = np.array([
+    ['#', '#', '#', '#', '#', '#', ' ', ' ', ' '],
+    ['#', 'r', ' ', ' ', ' ', '#', '#', ' ', ' '],
+    ['#', ' ', ' ', 'b', ' ', ' ', '#', '#', '#'],
+    ['#', ' ', ' ', ' ', ' ', ' ', 'B', 'R', '#'],
+    ['#', '#', '#', '#', '#', '#', '#', '#', '#']
+])
 
-game = GridGame(grid5)
-
-next_states = game.generate_next_states()
-
-for move, state in next_states:
-
-
-    print(f"Move: {move}")
-
-    for row in state:
-        print(" ".join(row))
-    print("\n")
-
+game = GridGame(grid3)
+game.dfs_solve()
+game.bfs_solve()
 
