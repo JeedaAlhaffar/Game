@@ -192,7 +192,41 @@ class GridGame:
 
         print("No solution found.")
         return None
+    def dfs_solve_recursive(self, current_state=None, path=None, visited=None, states_explored=0):
+        if current_state is None:
+            current_state = self
+        if path is None:
+            path = []
+        if visited is None:
+            visited = set()
 
+        state_repr = self.grid_repr(current_state.grid)
+        if state_repr in visited:
+            return None, states_explored
+
+        visited.add(state_repr)
+        states_explored += 1
+
+        if current_state.is_goal_state():
+            print("Solution found!")
+            print("Path to goal:")
+            for move, state in path:
+                print(f"Move: {move}")
+                for row in state.grid:
+                    print(" ".join(row))
+                print("\n")
+            print(f"Total states explored: {states_explored}")
+            return path, states_explored
+
+        for move, next_state in current_state.generate_next_states():
+            if self.grid_repr(next_state.grid) not in visited:
+                result_path, result_states = self.dfs_solve_recursive(
+                    next_state, path + [(move, next_state)], visited, states_explored
+                )
+                if result_path is not None:  
+                    return result_path, result_states
+
+        return None, states_explored 
     def grid_repr(self, grid):
         return tuple(tuple(row) for row in grid)
 
@@ -225,6 +259,6 @@ grid4 = np.array([
 ])
 
 game = GridGame(grid3)
-game.dfs_solve()
+game.dfs_solve_recursive()
 game.bfs_solve()
 
