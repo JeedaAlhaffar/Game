@@ -1,6 +1,8 @@
 import numpy as np
 import copy
 from collections import deque
+import heapq
+
 class Square:
     def __init__(self, color, start_pos, goal_pos):
         self.color = color
@@ -229,6 +231,43 @@ class GridGame:
         return None, states_explored 
     def grid_repr(self, grid):
         return tuple(tuple(row) for row in grid)
+    def ucs_solve(self):
+
+        priority_queue = []
+        heapq.heappush(priority_queue, (0, self, [])) 
+
+        visited = set()
+        states_explored = 0
+
+        while priority_queue:
+            cost, current_state, path = heapq.heappop(priority_queue)
+            state_repr = self.grid_repr(current_state.grid)
+
+            if state_repr in visited:
+                continue
+
+            visited.add(state_repr)
+            states_explored += 1
+
+            if current_state.is_goal_state():
+                print("Solution found using UCS!")
+                print("Path to goal:")
+                for move, state in path:
+                    print(f"Move: {move}")
+                    for row in state.grid:
+                        print(" ".join(row))
+                    print("\n")
+                print(f"Total states explored: {states_explored}")
+                return path
+
+
+            for move, next_state in current_state.generate_next_states():
+                if self.grid_repr(next_state.grid) not in visited:
+                    new_cost = cost + 1  
+                    heapq.heappush(priority_queue, (new_cost, next_state, path + [(move, next_state)]))
+
+        print("No solution found using UCS.")
+        return None        
 
 grid5 = np.array([
     [' ', '#', '#', '#', '#', '#', ' ', ' ', ' ', ' ', ' '],
@@ -261,4 +300,4 @@ grid4 = np.array([
 game = GridGame(grid3)
 game.dfs_solve_recursive()
 game.bfs_solve()
-
+game.dfs_solve()
