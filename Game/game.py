@@ -303,8 +303,7 @@ class Gridgame:
                 if self.grid_repr(next_state.grid) not in visited:
                     h = sum(heuristic(sq) for sq in next_state.squares if sq.active)
                     new_cost = g + 1 
-                    print(f"f: {f}")
-                    print(f"h: {g}")
+
 
 
                     heapq.heappush(priority_queue, (new_cost + h, new_cost, id(next_state), next_state, path + [(move, next_state)]))
@@ -312,12 +311,67 @@ class Gridgame:
         print("No solution found using A*.")
         return None
 
+    def hill_climbing_solve(self):
+        def heuristic(square):
+            return abs(square.x - square.goal_x) + abs(square.y - square.goal_y)
+
+        def evaluate_state(state):
+            return sum(heuristic(sq) for sq in state.squares if sq.active)
+
+        current_state = self
+        path = []
+        states_explored = 0
+
+        while not current_state.is_goal():
+            states_explored += 1
+            current_heuristic = evaluate_state(current_state)
+
+            neighbors = current_state.generate_next_states()
+            if not neighbors:
+                print("No more neighbors to explore. Stuck at a local maximum.")
+                break
+
+            best_move, best_state = None, None
+            best_heuristic = float('inf')
+            
+            for move, neighbor in neighbors:
+                neighbor_heuristic = evaluate_state(neighbor)
+                print(f"neighbor_heuristic: {neighbor_heuristic}")
+
+                if neighbor_heuristic < best_heuristic:
+                    best_heuristic = neighbor_heuristic
+                    best_move, best_state = move, neighbor
+
+            if best_heuristic >= current_heuristic:
+                print("No better neighbor found. Stuck at a local maximum.")
+                break
+            print(f"best_heuristic: {best_heuristic}")
+
+            path.append((best_move, best_state))
+            current_state = best_state
+
+        if current_state.is_goal():
+            print("Solution found using Hill Climbing!")
+            print("Path to goal:")
+            for move, state in path:
+                print(f"Move: {move}")
+                for row in state.grid:
+                    print(" ".join(row))
+                print("\n")
+            print(f"Total states explored: {states_explored}")
+            return path
+
+        print("No solution found using Hill Climbing.")
+        return None
+
+
+
 
 grid5 = np.array([
     [' ', '#', '#', '#', '#', '#', ' ', ' ', ' ', ' ', ' '],
     ['#', '#', 'R', ' ', ' ', '#', '#', '#', '#', '#', ' '],
     ['#', ' ', ' ', ' ', ' ', '#', '#', 'b', ' ', '#', ' '],
-    ['#', ' ', 'G', ' ', ' ', ' ', ' ', ' ', 'g', '#', '#'],
+    ['#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#', '#'],
     ['#', ' ', ' ', ' ', '#', '#', '#', ' ', ' ', 'r', '#'],
     ['#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#', '#'],
     ['#', '#', 'B', ' ', '#', '#', '#', '#', '#', '#', ' '],
@@ -344,5 +398,5 @@ grid4 = np.array([
 game = Gridgame(grid5)
 # game.dfs_solve_recursive()
 # game.bfs_solve()
-# game.dfs_solve()
-game.a_star_solve()
+# game.a_star_solve()
+game.hill_climbing_solve()
