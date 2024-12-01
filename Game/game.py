@@ -11,7 +11,7 @@ class Square:
         self.active = True  
 
 
-class GridGame:
+class Gridgame:
     def __init__(self, grid):
         self.original_grid = grid  
         self.grid = copy.deepcopy(grid)  
@@ -35,12 +35,12 @@ class GridGame:
         print("\n")
 
 
-    def is_within_bounds(self, x, y):
+    def is_withinBound(self, x, y):
         return 0 <= x < self.rows and 0 <= y < self.cols
 
     def can_move(self, x, y, dx, dy, occupied_positions):
         new_x, new_y = x + dx, y + dy
-        return (self.is_within_bounds(new_x, new_y) and
+        return (self.is_withinBound(new_x, new_y) and
                 self.grid[new_x][new_y] != '#' and
                 (new_x, new_y) not in occupied_positions)
 
@@ -66,7 +66,7 @@ class GridGame:
 
     def move_square(self, square, dx, dy, occupied_positions):
         x, y = square.x, square.y
-        while self.is_within_bounds(x + dx, y + dy) and \
+        while self.is_withinBound(x + dx, y + dy) and \
               self.grid[x + dx][y + dy] != '#' and \
               (x + dx, y + dy) not in occupied_positions:
             x += dx
@@ -125,10 +125,8 @@ class GridGame:
         print(f"Possible moves from current state: {possible_moves}")
 
         return next_states
-
-    def is_goal_state(self):
+    def is_goal(self):
         return all(not square.active for square in self.squares)
-
     def dfs_solve(self):
         stack = [(self, [])]  
         visited = set()
@@ -143,7 +141,7 @@ class GridGame:
             visited.add(state_repr)
             states_explored += 1
 
-            if current_state.is_goal_state():
+            if current_state.is_goal():
                 print("Solution found!")
                 print("Path to goal:")
                 for move, state in path:
@@ -160,7 +158,6 @@ class GridGame:
 
         print("No solution found.")
         return None
-
     def grid_repr(self, grid):
         return tuple(tuple(row) for row in grid)
     def bfs_solve(self):
@@ -177,7 +174,7 @@ class GridGame:
             visited.add(state_repr)
             states_explored += 1
 
-            if current_state.is_goal_state():
+            if current_state.is_goal():
                 print("Solution found!")
                 print("Path to goal:")
                 for move, state in path:
@@ -209,7 +206,7 @@ class GridGame:
         visited.add(state_repr)
         states_explored += 1
 
-        if current_state.is_goal_state():
+        if current_state.is_goal():
             print("Solution found!")
             print("Path to goal:")
             for move, state in path:
@@ -231,6 +228,7 @@ class GridGame:
         return None, states_explored 
     def grid_repr(self, grid):
         return tuple(tuple(row) for row in grid)
+        
     def ucs_solve(self):
 
         priority_queue = []
@@ -249,7 +247,7 @@ class GridGame:
             visited.add(state_repr)
             states_explored += 1
 
-            if current_state.is_goal_state():
+            if current_state.is_goal():
                 print("Solution found using UCS!")
                 print("Path to goal:")
                 for move, state in path:
@@ -267,7 +265,53 @@ class GridGame:
                     heapq.heappush(priority_queue, (new_cost, next_state, path + [(move, next_state)]))
 
         print("No solution found using UCS.")
-        return None        
+        return None
+    def a_star_solve(self):
+        def heuristic(square):
+            return abs(square.x - square.goal_x) + abs(square.y - square.goal_y)
+
+        priority_queue = []
+        heapq.heappush(priority_queue, (0, 0, id(self), self, []))  
+
+        visited = set()
+        states_explored = 0
+
+        while priority_queue:
+            f, g, _, current_state, path = heapq.heappop(priority_queue)  
+            state_repr = self.grid_repr(current_state.grid)
+            print(f"f: {f}")
+            print(f"h: {g}")
+
+            if state_repr in visited:
+                continue
+
+            visited.add(state_repr)
+            states_explored += 1
+
+            if current_state.is_goal():
+                print("Solution found using A*!")
+                print("Path to goal:")
+                for move, state in path:
+                    print(f"Move: {move}")
+                    for row in state.grid:
+                        print(" ".join(row))
+                    print("\n")
+                print(f"Total states explored: {states_explored}")
+                return path
+
+            for move, next_state in current_state.generate_next_states():
+                if self.grid_repr(next_state.grid) not in visited:
+                    h = sum(heuristic(sq) for sq in next_state.squares if sq.active)
+                    new_cost = g + 1 
+                    print(f"f: {f}")
+                    print(f"h: {g}")
+
+
+                    heapq.heappush(priority_queue, (new_cost + h, new_cost, id(next_state), next_state, path + [(move, next_state)]))
+
+        print("No solution found using A*.")
+        return None
+
 
 grid5 = np.array([
     [' ', '#', '#', '#', '#', '#', ' ', ' ', ' ', ' ', ' '],
@@ -297,7 +341,8 @@ grid4 = np.array([
     ['#', '#', '#', '#', '#', '#', '#', '#', '#']
 ])
 
-game = GridGame(grid3)
-game.dfs_solve_recursive()
-game.bfs_solve()
-game.dfs_solve()
+game = Gridgame(grid5)
+# game.dfs_solve_recursive()
+# game.bfs_solve()
+# game.dfs_solve()
+game.a_star_solve()
