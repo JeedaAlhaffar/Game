@@ -1,0 +1,27 @@
+DFS Algorithm Results:
+Execution Time: 0.1287 seconds
+States Explored: 152
+Solution Path Length: 64
+Recursive DFS Algorithm Results:
+Execution Time: 0.3845 seconds
+States Explored: 25
+Solution Path Length: 24
+BFS Algorithm Results:
+Execution Time: 10.9507 seconds
+States Explored: 10174
+Solution Path Length: 14
+A* Algorithm Results:
+Execution Time: 0.2915 seconds
+States Explored: 344
+Solution Path Length: 19
+Maximum Queue Size (Storage): 233
+A* Advanced Algorithm Results:
+Execution Time: 0.7245 seconds
+Number of Visited States: 750
+Number of States in Solution Path: 16
+Maximum Storage (Priority Queue Size): 505
+No better neighbor found. Stuck at a local maximum.
+Hill Climbing Algorithm Results (No Solution Found):
+Execution Time: 0.0069 seconds
+States Explored: 7
+Maximum Neighbors Explored (Storage): 4
